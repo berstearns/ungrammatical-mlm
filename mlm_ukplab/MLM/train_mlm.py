@@ -32,8 +32,8 @@ do_whole_word_mask = True       #If set to true, whole words are masked
 mlm_prob = 0.15                 #Probability that a word is replaced by a [MASK] token
 
 # Load the model
-model = AutoModelForMaskedLM.from_pretrained(model_folder if current_batch_idx > 1 else "bert-base-uncased")
-tokenizer = AutoTokenizer.from_pretrained(model_folder if current_batch_idx > 1 else "bert-base-uncased")
+model = AutoModelForMaskedLM.from_pretrained(model_folder if curr_batch_idx > 1 else "bert-base-uncased")
+tokenizer = AutoTokenizer.from_pretrained(model_folder if curr_batch_idx > 1 else "bert-base-uncased")
 
 
 output_dir = "output/batch-{}-{}-{}-".format(curr_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))

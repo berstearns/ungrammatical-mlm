@@ -15,6 +15,7 @@ import sys
 import gzip
 from datetime import datetime
 import os
+from dataloader import TokenizedSentencesDataset
 
 
 per_device_train_batch_size = 64
@@ -30,14 +31,14 @@ use_fp16 = False                #Set to True, if your GPU supports FP16 operatio
 max_length = 100                #Max length for a text input
 do_whole_word_mask = True       #If set to true, whole words are masked
 mlm_prob = 0.15                 #Probability that a word is replaced by a [MASK] token
+output_dir = "/content/drive/MyDrive/phd/code/data/run_20230821/output/batch-{}-{}-{}-".format(curr_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+print("Save checkpoints to:", output_dir)
 
 # Load the model
 model = AutoModelForMaskedLM.from_pretrained(model_folder if curr_batch_idx > 1 else "bert-base-uncased")
 tokenizer = AutoTokenizer.from_pretrained(model_folder if curr_batch_idx > 1 else "bert-base-uncased")
 
 
-output_dir = "/content/drive/MyDrive/phd/code/data/run_20230821/output/batch-{}-{}-{}-".format(curr_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-print("Save checkpoints to:", output_dir)
 
 
 ##### Load our training datasets
@@ -64,24 +65,6 @@ if len(sys.argv) >= 4:
 print("Dev sentences:", len(dev_sentences))
 '''
 
-#A dataset wrapper, that tokenizes our data on-the-fly
-class TokenizedSentencesDataset:
-    def __init__(self, sentences, tokenizer, max_length, cache_tokenization=False):
-        self.tokenizer = tokenizer
-        self.sentences = sentences
-        self.max_length = max_length
-        self.cache_tokenization = cache_tokenization
-
-    def __getitem__(self, item):
-        if not self.cache_tokenization:
-            return self.tokenizer(self.sentences[item], add_special_tokens=True, truncation=True, max_length=self.max_length, return_special_tokens_mask=True)
-
-        if isinstance(self.sentences[item], str):
-            self.sentences[item] = self.tokenizer(self.sentences[item], add_special_tokens=True, truncation=True, max_length=self.max_length, return_special_tokens_mask=True)
-        return self.sentences[item]
-
-    def __len__(self):
-        return len(self.sentences)
 
 train_dataset = TokenizedSentencesDataset(train_sentences, tokenizer, max_length)
 #dev_dataset = TokenizedSentencesDataset(dev_sentences, tokenizer, max_length, cache_tokenization=True) if len(dev_sentences) > 0 else None

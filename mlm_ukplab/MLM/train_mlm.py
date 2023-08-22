@@ -21,7 +21,7 @@ per_device_train_batch_size = 64
 last_batch_idx = 0
 curr_batch_idx = last_batch_idx + 1
 model_name = "bert-base-uncased"
-model_folder = "output/batch-{}-{}-{}-".format(last_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+model_folder = "/content/drive/MyDrive/phd/code/data/run_20230821/output/batch-{}-{}-{}-".format(last_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 batches_folder = "/content/drive/MyDrive/phd/code/data/run_20230821/batches_gt5_20230822/"
 train_filepath = os.path.join(batches_folder, f"batch_{curr_batch_idx}.txt") 
 save_steps = 1000               #Save model every 1k steps
@@ -36,7 +36,7 @@ model = AutoModelForMaskedLM.from_pretrained(model_folder if curr_batch_idx > 1 
 tokenizer = AutoTokenizer.from_pretrained(model_folder if curr_batch_idx > 1 else "bert-base-uncased")
 
 
-output_dir = "output/batch-{}-{}-{}-".format(curr_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+output_dir = "/content/drive/MyDrive/phd/code/data/run_20230821/output/batch-{}-{}-{}-".format(curr_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 print("Save checkpoints to:", output_dir)
 
 

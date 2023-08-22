@@ -21,7 +21,7 @@ from dataloader import TokenizedSentencesDataset
 per_device_train_batch_size = 64
 last_batch_idx = max([int(folder.split("-")[1]) for folder in os.listdir("/content/drive/MyDrive/phd/code/data/run_20230821/output/")])
 print(f"last_batch_idx : {last_batch_idx}")
-input("continue ?")
+print(f"curr_batch_idx : {curr_batch_idx}")
 curr_batch_idx = last_batch_idx + 1
 model_name = "bert-base-uncased"
 model_folder = "/content/drive/MyDrive/phd/code/data/run_20230821/output/batch-{}-{}-{}".format(last_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))

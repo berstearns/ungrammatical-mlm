@@ -14,14 +14,16 @@ from transformers import Trainer, TrainingArguments
 import sys
 import gzip
 from datetime import datetime
+import os
 
-if len(sys.argv) < 3:
-    print("Usage: python train_mlm.py model_name data/train_sentences.txt [data/dev_sentences.txt]")
-    exit()
 
-model_name = sys.argv[1]
 per_device_train_batch_size = 64
-
+last_batch_idx = 1
+curr_batch_idx = last_batch_idx + 1
+model_name = "bert-base-uncased"
+model_folder = "output/batch-{}-{}-{}-".format(last_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+batches_folder = ""
+train_filepath = os.path.join(batches_folder, f"batch_{curr_batch_idx}") 
 save_steps = 1000               #Save model every 1k steps
 num_train_epochs = 3            #Number of epochs
 use_fp16 = False                #Set to True, if your GPU supports FP16 operations
@@ -30,19 +32,18 @@ do_whole_word_mask = True       #If set to true, whole words are masked
 mlm_prob = 0.15                 #Probability that a word is replaced by a [MASK] token
 
 # Load the model
-model = AutoModelForMaskedLM.from_pretrained(model_name)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForMaskedLM.from_pretrained(model_folder)
+tokenizer = AutoTokenizer.from_pretrained(model_folder)
 
 
-output_dir = "output/{}-{}".format(model_name.replace("/", "_"),  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+output_dir = "output/batch-{}-{}-{}-".format(curr_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 print("Save checkpoints to:", output_dir)
 
 
 ##### Load our training datasets
 
 train_sentences = []
-train_path = sys.argv[2]
-with gzip.open(train_path, 'rt', encoding='utf8') if train_path.endswith('.gz') else  open(train_path, 'r', encoding='utf8') as fIn:
+with gzip.open(train_filepath, 'rt', encoding='utf8') if train_filepath.endswith('.gz') else  open(train_filepath, 'r', encoding='utf8') as fIn:
     for line in fIn:
         line = line.strip()
         if len(line) >= 10:
@@ -51,6 +52,7 @@ with gzip.open(train_path, 'rt', encoding='utf8') if train_path.endswith('.gz') 
 print("Train sentences:", len(train_sentences))
 
 dev_sentences = []
+'''
 if len(sys.argv) >= 4:
     dev_path = sys.argv[3]
     with gzip.open(dev_path, 'rt', encoding='utf8') if dev_path.endswith('.gz') else open(dev_path, 'r', encoding='utf8') as fIn:
@@ -60,6 +62,7 @@ if len(sys.argv) >= 4:
                 dev_sentences.append(line)
 
 print("Dev sentences:", len(dev_sentences))
+'''
 
 #A dataset wrapper, that tokenizes our data on-the-fly
 class TokenizedSentencesDataset:
@@ -81,7 +84,8 @@ class TokenizedSentencesDataset:
         return len(self.sentences)
 
 train_dataset = TokenizedSentencesDataset(train_sentences, tokenizer, max_length)
-dev_dataset = TokenizedSentencesDataset(dev_sentences, tokenizer, max_length, cache_tokenization=True) if len(dev_sentences) > 0 else None
+#dev_dataset = TokenizedSentencesDataset(dev_sentences, tokenizer, max_length, cache_tokenization=True) if len(dev_sentences) > 0 else None
+dev_dataset = None
 
 
 ##### Training arguments

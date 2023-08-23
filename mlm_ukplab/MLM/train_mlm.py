@@ -19,7 +19,8 @@ from dataloader import TokenizedSentencesDataset
 
 
 per_device_train_batch_size = 64
-last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder) for folder in os.listdir("/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/")])
+trained_models_dir = os.listdir("/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/")
+last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder) for folder in trained_models_dir]) if len(trained_models_dir) > 0 else 0
 curr_batch_idx = last_batch_idx + 1
 print(f"last_batch_idx : {last_batch_idx}")
 print(f"curr_batch_idx : {curr_batch_idx}")

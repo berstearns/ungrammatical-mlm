@@ -19,21 +19,22 @@ from dataloader import TokenizedSentencesDataset
 
 
 per_device_train_batch_size = 64
-last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder) for folder in os.listdir("/content/drive/MyDrive/phd/code/data/run_20230821/output/")])
+last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder) for folder in os.listdir("/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/")])
 curr_batch_idx = last_batch_idx + 1
 print(f"last_batch_idx : {last_batch_idx}")
 print(f"curr_batch_idx : {curr_batch_idx}")
 model_name = "bert-base-uncased"
-model_folder = f"/content/drive/MyDrive/phd/code/data/run_20230821/output/{model_foldername}"
+log_folder  = f"/content/drive/MyDrive/phd/code/data/run_20230821/logs/"
+model_folder = f"/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/{model_foldername}"
 batches_folder = "/content/drive/MyDrive/phd/code/data/run_20230821/batches_gt5_20230822/"
 train_filepath = os.path.join(batches_folder, f"batch_{curr_batch_idx}.txt") 
 save_steps = 1000               #Save model every 1k steps
-num_train_epochs = 3            #Number of epochs
+num_train_epochs = 1            #Number of epochs
 use_fp16 = False                #Set to True, if your GPU supports FP16 operations
 max_length = 100                #Max length for a text input
 do_whole_word_mask = True       #If set to true, whole words are masked
 mlm_prob = 0.15                 #Probability that a word is replaced by a [MASK] token
-output_dir = "/content/drive/MyDrive/phd/code/data/run_20230821/output/batch-{}-{}-{}".format(curr_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+output_dir = "/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/batch-{}-{}-{}".format(curr_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 print("Save checkpoints to:", output_dir)
 
 # Load the model

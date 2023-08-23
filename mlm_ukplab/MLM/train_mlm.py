@@ -20,13 +20,13 @@ from dataloader import TokenizedSentencesDataset
 
 per_device_train_batch_size = 64
 trained_models_dir = os.listdir("/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/")
-last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder) for folder in trained_models_dir]) if len(trained_models_dir) > 0 else 0
+last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder) for folder in trained_models_dir]) if len(trained_models_dir) > 0 else (0, None)
 curr_batch_idx = last_batch_idx + 1
 print(f"last_batch_idx : {last_batch_idx}")
 print(f"curr_batch_idx : {curr_batch_idx}")
 model_name = "bert-base-uncased"
 log_folder  = f"/content/drive/MyDrive/phd/code/data/run_20230821/logs/"
-model_folder = f"/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/{model_foldername}"
+model_folder = f"/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/{model_foldername}" if model_foldername else None
 batches_folder = "/content/drive/MyDrive/phd/code/data/run_20230821/batches_gt5_20230822/"
 train_filepath = os.path.join(batches_folder, f"batch_{curr_batch_idx}.txt") 
 save_steps = 1000               #Save model every 1k steps
@@ -39,8 +39,8 @@ output_dir = "/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/ba
 print("Save checkpoints to:", output_dir)
 
 # Load the model
-model = AutoModelForMaskedLM.from_pretrained(model_folder if curr_batch_idx > 1 else "bert-base-uncased")
-tokenizer = AutoTokenizer.from_pretrained(model_folder if curr_batch_idx > 1 else "bert-base-uncased")
+model = AutoModelForMaskedLM.from_pretrained(model_folder if model_folder != None else "bert-base-uncased")
+tokenizer = AutoTokenizer.from_pretrained(model_folder if model_folder != None else "bert-base-uncased")
 
 
 

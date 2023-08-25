@@ -48,7 +48,7 @@ if dataset == "fce":
             for annotation in sentence_dict["annotations"]:
                 s, e  = annotation["span_in_DeannotatedSentence"]
                 masked_token = sent[s:e]
-                if masked_token == ""
+                if masked_token == "":
                     continue
                 corrected_token = annotation["correct_token"]
                 masked_sentence = sent[:s] + tokenizer.mask_token + sent[e:]

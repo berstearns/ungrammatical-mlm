@@ -18,24 +18,26 @@ import os
 from dataloader import TokenizedSentencesDataset
 
 
-def decide_trainedModelsDir():
-    lastEpochDir_files = os.listdir("/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/")
-    currEpochDir_files = os.listdir("/content/drive/MyDrive/phd/code/data/run_20230821/output_2epoch/") 
-    if len(currEpochDir_files) == 0:
-        return lastEpochDir_files  
+def decide_trainedModelsDir(lastEpoch_folderpath, currEpoch_folderpath):
+    lastEpochDir_folders = os.listdir(lastEpoch_folderpath)
+    currEpochDir_folders = os.listdir(currEpoch_folderpath) 
+    if len(currEpochDir_folders) == 0:
+        return (lastEpoch_folderpath, lastEpochDir_folders)  
     else:
-        return currEpochDir_files
+        return (currEpoch_folderpath, currEpochDir_folders)
 
+lastEpoch_folderpath = "/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/"
+currEpoch_folderpath = "/content/drive/MyDrive/phd/code/data/run_20230821/output_2epoch/"
 epoch_num = 2
 per_device_train_batch_size = 64
-trained_models_dir = decide_trainedModelsDir() 
-last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder) for folder in trained_models_dir]) if len(trained_models_dir) > 0 else (0, None)
+selectedEpoch_folderpath, trainedModelsDir_folders = decide_trainedModelsDir(lastEpoch_folderpath, currEpoch_folderpath) 
+last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder) for folder in trainedModelsDir_folders]) if len(trainedModelsDir_folders) > 0 else (0, None)
 curr_batch_idx = last_batch_idx + 1
 print(f"last_batch_idx : {last_batch_idx}")
 print(f"curr_batch_idx : {curr_batch_idx}")
 model_name = "bert-base-uncased"
 log_folder  = f"/content/drive/MyDrive/phd/code/data/run_20230821/logs/"
-checkpointModel_folder = f"{trained_models_dir}/{model_foldername}" if model_foldername else None
+checkpointModel_folder = f"{selectedEpoch_folderpath}/{model_foldername}" if model_foldername else None
 batches_folder = "/content/drive/MyDrive/phd/code/data/run_20230821/batches_gt5_20230822/"
 train_filepath = os.path.join(batches_folder, f"batch_{curr_batch_idx}.txt") 
 save_steps = 1000               #Save model every 1k steps

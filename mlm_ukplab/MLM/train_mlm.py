@@ -42,9 +42,9 @@ def decide_trainedModelsDir(lastEpoch_folderpath, currEpoch_folderpath):
 # do_whole_word_mask = True       #If set to true, whole words are masked
 # mlm_prob = 0.15                 #Probability that a word is replaced by a [MASK] token
 
-with open("/app/pipelines/mlm_ungrammatical_text/mlm_ukplab/MLM/run_configs/fullefcamdat_gt5_1epoch.json") as inpf:
+config_filepath = sys.argv[1] # "/app/pipelines/mlm_ungrammatical_text/mlm_ukplab/MLM/run_configs/fullefcamdat_gt5_1epoch.json"
+with open(config_filepath) as inpf:
     config = json.load(inpf)
-
 
 selectedEpoch_folderpath, trainedModelsDir_folders = decide_trainedModelsDir(lastEpoch_folderpath, currEpoch_folderpath) 
 if selectedEpoch_folderpath == lastEpoch_folderpath:

@@ -54,6 +54,7 @@ max_length = 100                #Max length for a text input
 do_whole_word_mask = True       #If set to true, whole words are masked
 mlm_prob = 0.15                 #Probability that a word is replaced by a [MASK] token
 output_dir = "/content/drive/MyDrive/phd/code/data/run_20230821/output_{}epoch/batch-{}-{}-{}".format(epoch_num, curr_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+print(f"Using checkpoint model: {checkpointModel_folder}")
 print("Save checkpoints to:", output_dir)
 
 # Load the model

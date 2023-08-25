@@ -31,7 +31,14 @@ currEpoch_folderpath = "/content/drive/MyDrive/phd/code/data/run_20230821/output
 epoch_num = 2
 per_device_train_batch_size = 64
 selectedEpoch_folderpath, trainedModelsDir_folders = decide_trainedModelsDir(lastEpoch_folderpath, currEpoch_folderpath) 
-last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder) for folder in trainedModelsDir_folders]) if len(trainedModelsDir_folders) > 0 else (0, None)
+if selectedEpoch_folderpath == lastEpoch_folderpath:
+    last_batch_idx, model_foldername = max([(0,folder)\
+                    for folder in trainedModelsDir_folders])\ 
+                    if len(trainedModelsDir_folders) > 0 else (0, None)
+else:
+    last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder)\
+                    for folder in trainedModelsDir_folders])\ 
+                    if len(trainedModelsDir_folders) > 0 else (0, None)
 curr_batch_idx = last_batch_idx + 1
 print(f"last_batch_idx : {last_batch_idx}")
 print(f"curr_batch_idx : {curr_batch_idx}")

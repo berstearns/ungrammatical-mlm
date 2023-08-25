@@ -28,7 +28,7 @@ def decide_trainedModelsDir():
 
 epoch_num = 2
 per_device_train_batch_size = 64
-trained_models_dir = decide_trainedModelsDir 
+trained_models_dir = decide_trainedModelsDir() 
 last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder) for folder in trained_models_dir]) if len(trained_models_dir) > 0 else (0, None)
 curr_batch_idx = last_batch_idx + 1
 print(f"last_batch_idx : {last_batch_idx}")

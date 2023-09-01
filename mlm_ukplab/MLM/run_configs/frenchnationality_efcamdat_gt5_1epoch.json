@@ -1,7 +1,7 @@
 {
-    "batches_folder" : "/content/drive/MyDrive/phd/code/data/run_20230821/batches_gt5_20230822/",
-    "lastEpoch_folderpath" : "/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/",
-    "currEpoch_folderpath" : "/content/drive/MyDrive/phd/code/data/run_20230821/output_2epoch/",
+    "batches_folder" : "/content/drive/MyDrive/phd/code/data/run_20230901/batches_fr_gt5_20230825/",
+    "lastEpoch_folderpath" : "",
+    "currEpoch_folderpath" : "/content/drive/MyDrive/phd/code/data/run_20230821/output_1epoch/",
     "log_folder"  : "/content/drive/MyDrive/phd/code/data/run_20230821/logs/",
     "model_name" : "bert-base-uncased",
     "epoch_num" : 2,

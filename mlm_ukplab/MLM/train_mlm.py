@@ -20,9 +20,9 @@ from dataloader import TokenizedSentencesDataset
 
 
 def decide_trainedModelsDir(lastEpoch_folderpath, currEpoch_folderpath):
-    lastEpochDir_folders = os.listdir(lastEpoch_folderpath)
+    lastEpochDir_folders = os.listdir(lastEpoch_folderpath) if lastEpoch_folderpath != '' else []
     currEpochDir_folders = os.listdir(currEpoch_folderpath) 
-    if len(currEpochDir_folders) == 0:
+    if len(currEpochDir_folders) == 0 and lastEpoch_folderpath != '':
         return (lastEpoch_folderpath, lastEpochDir_folders)  
     else:
         return (currEpoch_folderpath, currEpochDir_folders)

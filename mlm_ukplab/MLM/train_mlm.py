@@ -61,7 +61,7 @@ curr_batch_idx = last_batch_idx + 1
 print(f"last_batch_idx : {last_batch_idx}")
 print(f"curr_batch_idx : {curr_batch_idx}")
 train_filepath = os.path.join(batches_folder, f"batch_{curr_batch_idx}.txt") 
-output_dir = "{}/batch-{}-{}-{}".format(
+output_dir = "{}batch-{}-{}-{}".format(
                             currEpoch_folderpath,
                             curr_batch_idx,
                             model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))

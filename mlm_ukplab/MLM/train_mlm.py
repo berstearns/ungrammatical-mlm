@@ -61,7 +61,10 @@ curr_batch_idx = last_batch_idx + 1
 print(f"last_batch_idx : {last_batch_idx}")
 print(f"curr_batch_idx : {curr_batch_idx}")
 train_filepath = os.path.join(batches_folder, f"batch_{curr_batch_idx}.txt") 
-output_dir = "/content/drive/MyDrive/phd/code/data/run_20230821/output_{}epoch/batch-{}-{}-{}".format(epoch_num, curr_batch_idx, model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+output_dir = "{}/output_{}epoch/batch-{}-{}-{}".format(
+                            currEpoch_folderpath,
+                            epoch_num, curr_batch_idx,
+                            model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 print(f"Using checkpoint model: {checkpointModel_folder}")
 print("Save checkpoints to:", output_dir)
 

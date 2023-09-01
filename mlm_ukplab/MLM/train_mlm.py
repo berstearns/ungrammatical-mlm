@@ -67,6 +67,7 @@ output_dir = "{}batch-{}-{}-{}".format(
                             model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 print(f"Using checkpoint model: {checkpointModel_folder}")
 print("Save checkpoints to:", output_dir)
+exit()
 
 # Load the model
 model = AutoModelForMaskedLM.from_pretrained(checkpointModel_folder if checkpointModel_folder != None else "bert-base-uncased")

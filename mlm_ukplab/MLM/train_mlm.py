@@ -60,7 +60,6 @@ checkpointModel_folder = f"{selectedEpoch_folderpath}/{model_foldername}" if mod
 curr_batch_idx = last_batch_idx + 1
 print(f"last_batch_idx : {last_batch_idx}")
 print(f"curr_batch_idx : {curr_batch_idx}")
-exit()
 train_filepath = os.path.join(batches_folder, f"batch_{curr_batch_idx}.txt") 
 output_dir = "{}/output_{}epoch/batch-{}-{}-{}".format(
                             currEpoch_folderpath,
@@ -68,6 +67,7 @@ output_dir = "{}/output_{}epoch/batch-{}-{}-{}".format(
                             model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 print(f"Using checkpoint model: {checkpointModel_folder}")
 print("Save checkpoints to:", output_dir)
+exit()
 
 # Load the model
 model = AutoModelForMaskedLM.from_pretrained(checkpointModel_folder if checkpointModel_folder != None else "bert-base-uncased")

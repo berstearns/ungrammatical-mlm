@@ -56,7 +56,7 @@ else:
     last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder)\
                     for folder in trainedModelsDir_folders])\
                     if len(trainedModelsDir_folders) > 0 else (0, None)
-checkpointModel_folder = f"{selectedEpoch_folderpath}/{model_foldername}" if model_foldername else None
+checkpointModel_folder = f"{selectedEpoch_folderpath}{model_foldername}" if model_foldername else None
 curr_batch_idx = last_batch_idx + 1
 print(f"last_batch_idx : {last_batch_idx}")
 print(f"curr_batch_idx : {curr_batch_idx}")

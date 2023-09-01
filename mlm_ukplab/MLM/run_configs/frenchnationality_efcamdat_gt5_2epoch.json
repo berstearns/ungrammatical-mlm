@@ -1,0 +1,15 @@
+{
+    "batches_folder" : "/content/drive/MyDrive/phd/code/data/run_20230901/batches_fr_gt5_20230825/",
+    "lastEpoch_folderpath" : "/content/drive/MyDrive/phd/code/data/run_20230901/output_1epoch/",
+    "currEpoch_folderpath" : "/content/drive/MyDrive/phd/code/data/run_20230901/output_2epoch/",
+    "log_folder"  : "/content/drive/MyDrive/phd/code/data/run_20230821/logs/",
+    "model_name" : "bert-base-uncased",
+    "epoch_num" : 2,
+    "per_device_train_batch_size" : 64,
+    "save_steps" : 1000,
+    "num_train_epochs" : 1,
+    "use_fp16" : false,
+    "max_length" : 100,
+    "do_whole_word_mask" : true,
+    "mlm_prob" : 0.15
+}

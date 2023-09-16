@@ -45,6 +45,7 @@ def decide_trainedModelsDir(lastEpoch_folderpath, currEpoch_folderpath):
 config_filepath = sys.argv[1] # "/app/pipelines/mlm_ungrammatical_text/mlm_ukplab/MLM/run_configs/fullefcamdat_gt5_1epoch.json"
 with open(config_filepath) as inpf:
     config = json.load(inpf)
+    print(config);exit()
     locals().update(config)
 
 selectedEpoch_folderpath, trainedModelsDir_folders = decide_trainedModelsDir(lastEpoch_folderpath, currEpoch_folderpath) 
@@ -60,7 +61,8 @@ checkpointModel_folder = f"{selectedEpoch_folderpath}{model_foldername}" if mode
 curr_batch_idx = last_batch_idx + 1
 print(f"last_batch_idx : {last_batch_idx}")
 print(f"curr_batch_idx : {curr_batch_idx}")
-train_filepath = os.path.join(batches_folder, f"batch_{curr_batch_idx}.txt") 
+train_filepath = os.path.join(batches_folder, f"batch_{curr_batch_idx}.txt") if batches_folder in locals() else train_filepath 
+# for trainining with single  train_filepath instead of batch folder the output_dir should be constant
 output_dir = "{}batch-{}-{}-{}".format(
                             currEpoch_folderpath,
                             curr_batch_idx,
@@ -86,18 +88,6 @@ with gzip.open(train_filepath, 'rt', encoding='utf8') if train_filepath.endswith
 
 print("Train sentences:", len(train_sentences))
 
-dev_sentences = []
-'''
-if len(sys.argv) >= 4:
-    dev_path = sys.argv[3]
-    with gzip.open(dev_path, 'rt', encoding='utf8') if dev_path.endswith('.gz') else open(dev_path, 'r', encoding='utf8') as fIn:
-        for line in fIn:
-            line = line.strip()
-            if len(line) >= 10:
-                dev_sentences.append(line)
-
-print("Dev sentences:", len(dev_sentences))
-'''
 
 
 train_dataset = TokenizedSentencesDataset(train_sentences, tokenizer, max_length)
@@ -137,7 +127,11 @@ trainer = Trainer(
 print("Save tokenizer to:", output_dir)
 tokenizer.save_pretrained(output_dir)
 
+print(trainer.state)
+print(trainer.state.log_history)
+exit()
 trainer.train()
+
 
 print("Save model to:", output_dir)
 model.save_pretrained(output_dir)

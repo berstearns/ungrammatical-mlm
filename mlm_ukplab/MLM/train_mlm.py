@@ -45,7 +45,7 @@ def decide_trainedModelsDir(lastEpoch_folderpath, currEpoch_folderpath):
 config_filepath = sys.argv[1] # "/app/pipelines/mlm_ungrammatical_text/mlm_ukplab/MLM/run_configs/fullefcamdat_gt5_1epoch.json"
 with open(config_filepath) as inpf:
     config = json.load(inpf)
-    print(config);exit()
+    print(config);
     locals().update(config)
 
 selectedEpoch_folderpath, trainedModelsDir_folders = decide_trainedModelsDir(lastEpoch_folderpath, currEpoch_folderpath) 

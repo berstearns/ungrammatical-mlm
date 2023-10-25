@@ -1,0 +1,15 @@
+learner_l1,learner_CEFR,masked_sentence,incorrect_token,incorrect_tokenIdx,incorrect_token_length,incorrect_token_surprisal,incorrect_token_position,incorrect_token_pos,model_name,top_1_token,top_1_probability,top_1_pos,top_k=1,top_k2=top_k=10
+pt,c1,"bla bla bla [MASK] bla bla bla",1,1 
+
+
+
+
+CEFR_proxy, raw_score, true_token_rank, error_tag
+
+
+
+for predicting the corrected_tokens, we will just predict the first corrected token but we want
+to measure
+-> number of corrected tokens
+-> all the correction tokens related to the that annotation
+-> 

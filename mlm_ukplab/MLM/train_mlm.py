@@ -22,7 +22,9 @@ from dataloader import TokenizedSentencesDataset
 def decide_trainedModelsDir(lastEpoch_folderpath, currEpoch_folderpath):
     lastEpochDir_folders = os.listdir(lastEpoch_folderpath) if lastEpoch_folderpath != '' else []
     currEpochDir_folders = os.listdir(currEpoch_folderpath) 
-    if len(currEpochDir_folders) == 0 and lastEpoch_folderpath != '':
+    if lastEpoch_folderpath == currEpoch_folderpath: 
+        return (currEpoch_folderpath, currEpochDir_folders) 
+    elif len(currEpochDir_folders) == 0 and lastEpoch_folderpath != '':
         return (lastEpoch_folderpath, lastEpochDir_folders)  
     else:
         return (currEpoch_folderpath, currEpochDir_folders)
@@ -49,6 +51,7 @@ with open(config_filepath) as inpf:
     locals().update(config)
 
 selectedEpoch_folderpath, trainedModelsDir_folders = decide_trainedModelsDir(lastEpoch_folderpath, currEpoch_folderpath) 
+print(selectedEpoch_folderpath, trainedModelsDir_folders)
 if selectedEpoch_folderpath == lastEpoch_folderpath:
     last_batch_idx, model_foldername = max([(0,folder)\
                     for folder in trainedModelsDir_folders])\
@@ -57,16 +60,28 @@ else:
     last_batch_idx, model_foldername = max([(int(folder.split("-")[1]),folder)\
                     for folder in trainedModelsDir_folders])\
                     if len(trainedModelsDir_folders) > 0 else (0, None)
+print(last_batch_idx, model_foldername )
 checkpointModel_folder = f"{selectedEpoch_folderpath}{model_foldername}" if model_foldername else None
+print(checkpointModel_folder)
 curr_batch_idx = last_batch_idx + 1
 print(f"last_batch_idx : {last_batch_idx}")
 print(f"curr_batch_idx : {curr_batch_idx}")
-train_filepath = os.path.join(batches_folder, f"batch_{curr_batch_idx}.txt") if batches_folder in locals() else train_filepath 
-# for trainining with single  train_filepath instead of batch folder the output_dir should be constant
-output_dir = "{}batch-{}-{}-{}".format(
-                            currEpoch_folderpath,
-                            curr_batch_idx,
-                            model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+if not overwrite_output_dir:
+    train_filepath = os.path.join(batches_folder, f"batch_{curr_batch_idx}.txt") if batches_folder in locals() else train_filepath 
+    # for trainining with single  train_filepath instead of batch folder the output_dir should be constant
+    output_dir = "{}batch-{}-{}-{}".format(
+                                currEpoch_folderpath,
+                                curr_batch_idx,
+                                model_name,  datetime.now().strftime("%Y-%m-%d_%H-%M-%S")) 
+else:
+    # for trainining with single  train_filepath instead of batch folder the output_dir should be constant
+    output_dir = "{}{}-{}".format(
+                                currEpoch_folderpath,
+                                model_name,
+                                dataset_nickname
+                                ) 
+#tokenizer_output_dir = os.path.join(output_dir,"tokenizer")
+
 print(f"Using checkpoint model: {checkpointModel_folder}")
 print("Save checkpoints to:", output_dir)
 
@@ -85,6 +100,7 @@ with gzip.open(train_filepath, 'rt', encoding='utf8') if train_filepath.endswith
         line = line.strip()
         if len(line) >= 10:
             train_sentences.append(line)
+    train_sentences = train_sentences[:10]
 
 print("Train sentences:", len(train_sentences))
 
@@ -104,7 +120,7 @@ else:
 
 training_args = TrainingArguments(
     output_dir=output_dir,
-    overwrite_output_dir=True,
+    overwrite_output_dir=overwrite_output_dir,
     num_train_epochs=num_train_epochs,
     evaluation_strategy="steps" if dev_dataset is not None else "no",
     per_device_train_batch_size=per_device_train_batch_size,
@@ -127,12 +143,10 @@ trainer = Trainer(
 print("Save tokenizer to:", output_dir)
 tokenizer.save_pretrained(output_dir)
 
+trainer.train()
 print(trainer.state)
 print(trainer.state.log_history)
-exit()
-trainer.train()
-
-
+print(dir(trainer))
 print("Save model to:", output_dir)
 model.save_pretrained(output_dir)
 

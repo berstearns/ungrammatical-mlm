@@ -89,6 +89,30 @@ def load_words(fo):
     return words
 
 def process_annotation_incorrect_token(instances_count_, global_top_k_, languages_top_k_, columns_written_,  annotation_, tokenizer_, sentence_dict_, learnerl1_, model_, MODEL_NAME, MAX_K, FCE_DATASET_OUTF):
+    """
+        process an annotation of an incorrect token
+        params:
+            instances_count_: dict
+            global_top_k_: list
+            languages_top_k_: dict
+            columns_written_: bool
+            annotation_: dict
+            tokenizer_: tokenizer
+            sentence_dict_: dict
+            learnerl1_: str
+            model_: model
+            MODEL_NAME: str
+            MAX_K: int
+            FCE_DATASET_OUTF: file
+        returns:
+            instances_count_: dict
+            global_top_k_: list
+            languages_top_k_: dict
+            columns_written_: bool
+        examples:
+            >>> process_annotation_incorrect_token(instances_count_, global_top_k_, languages_top_k_, columns_written_,  annotation_, tokenizer_, sentence_dict_, learnerl1_, model_, MODEL_NAME, MAX_K, FCE_DATASET_OUTF)
+            (instances_count_, global_top_k_, languages_top_k_, columns_written_)
+    """
     instances_count_[f"replacement_annotations_n_tokens{annotation_['number_of_incorrect_tokens']}"] +=1
     instances_count_[f"mapping_{len(annotation_['aligned_incorrect_tokens'])}-{len(annotation_['correct_token'].split(' '))}"]+=1
     instances_count_["annotations"] +=1
@@ -319,7 +343,6 @@ def main(_INPUT_FILEPATH,
             model = AutoModelForMaskedLM.from_pretrained(_MODEL_FOLDER)
             tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
-
     if _DATASET_NAME.upper()  == "FCE": 
         columns_written = False
         instances_count = collections.defaultdict(int)
@@ -332,7 +355,7 @@ def main(_INPUT_FILEPATH,
                 learnerl1 = sentence_dict["learnerl1"] 
                 for annotation in sentence_dict["annotations"]:
                     instances_count[f"annotations_n_tokens{annotation['number_of_incorrect_tokens']}"] +=1
-                    if annotation["match_type"] != "replacement_correction": #masked_token == "":
+                    if annotation["regex_match_type"] != "replacement_correction": #masked_token == "":
                         continue
                     if _PREDICTION_TARGET == PredictionTargets["i"]:
                         instances_count, global_top_k, languages_top_k, columns_written =\
@@ -380,7 +403,7 @@ def main(_INPUT_FILEPATH,
                 learnerl1 = sentence_dict["learnerl1"] 
                 for annotation in sentence_dict["annotations"]:
                     instances_count[f"annotations_n_tokens{annotation['number_of_incorrect_tokens']}"] +=1
-                    if annotation["match_type"] != "replacement_correction": #masked_token == "":
+                    if annotation["regex_match_type"] != "replacement_correction": #masked_token == "":
                         continue
                     if PREDICTION_TARGET == PredictionTargets["i"]:
                         instances_count, global_top_k, languages_top_k, columns_written =\

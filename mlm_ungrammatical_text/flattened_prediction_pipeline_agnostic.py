@@ -31,9 +31,10 @@ debugging_examples = [
         f''
     ]
 
-def top_k(true_token_idx, top_k_predictions, MAX_K=10):
+def str_based_top_k(true_token_str, top_k_predictions, MAX_K):
+    true_token_str = "shocked"
     #top_k_token_idxs = [idx for (_,idx, *_) in top_k_predictions ]
-    true_token_rank = [rank_idx for rank_idx, (_,idx, *_) in enumerate(top_k_predictions) if idx == true_token_idx]
+    true_token_rank = [rank_idx+1 for rank_idx, (token_str, idx, *_) in enumerate(top_k_predictions) if token_str == true_token_str]
     true_token_rank = true_token_rank[0] if len(true_token_rank) > 0 else MAX_K
     top_k_flags = [ 1 if idx >= true_token_rank else 0 for idx in range(0, MAX_K) ]
     '''
@@ -54,12 +55,12 @@ def prediction_postag(tokenized_masked_sentence_, prediction_token_str, tokenize
     tokenized_masked_sentence_[mask_token_idx] = mask_token 
     return prediction_pos 
 
-def predict(tokenizer, model, MODEL_NAME, tokenized_masked_sentence, annotation_, aligned_token_idx, k, printFlag=False):
+def predict(tokenizer, model, MODEL_NAME, masked_tokenized_sentence_str_batch, k, printFlag=False):
     '''
-        predict a masked sentence
+        returns the top k predictions for a given masked sentence
     '''
-    masked_sentence_str = " ".join(tokenized_masked_sentence)
-    inputs = tokenizer(masked_sentence_str, return_tensors="pt")
+    start_time = time.time()
+    inputs = tokenizer.batch_encode_plus(masked_tokenized_sentence_str_batch, return_tensors="pt",padding=True)
     mask_token_index = torch.where(inputs["input_ids"] == tokenizer.mask_token_id)[1]
 
     logits = model(**inputs).logits
@@ -68,18 +69,14 @@ def predict(tokenizer, model, MODEL_NAME, tokenized_masked_sentence, annotation_
     mask_token_probas = probas[0, mask_token_index, :]
     top_k_tokens = torch.topk(mask_token_probas, k, dim=1)
     top_k_tpls_per_masked_token = [list(zip(*tpl)) for tpl in zip(top_k_tokens.indices.tolist(), top_k_tokens.values.tolist())]
-    top_k_tpls_per_masked_token = [[(tokenizer.decode(tpl[0]), *tpl, prediction_postag(tokenized_masked_sentence,tokenizer.decode(tpl[0]),tokenizer))
+    top_k_tpls_per_masked_token = [[(tokenizer.decode(tpl[0]), *tpl, '')
                                    for tpl in prediction_list] for prediction_list in top_k_tpls_per_masked_token]
-
-
-    annotation_["aligned_incorrect_tokens"][aligned_token_idx] = (*annotation_["aligned_incorrect_tokens"][aligned_token_idx],(MODEL_NAME,*top_k_tpls_per_masked_token[0]))   
-    #annotation_["aligned_incorrect_tokens"] = [(*tpl[aligned_token_idx],(MODEL_NAME,*tpl[1])) for tpl in zip(annotation_["aligned_incorrect_tokens"],top_k_tpls_per_masked_token)]
     if printFlag:
         for predictions_tpls in top_k_tpls_per_masked_token:
             for prediction_tpl in predictions_tpls:
                 (token_idx, token_prob) = prediction_tpl
                 print(f"prob: {token_prob:.2f} ",masked_sentence_str.replace(tokenizer.mask_token, Back.GREEN + tokenizer.decode([token_idx]) +Style.RESET_ALL,1))
-    return top_k_tpls_per_masked_token, annotation_ 
+    return top_k_tpls_per_masked_token 
 
 def load_words(fo):
     words = set()
@@ -88,49 +85,8 @@ def load_words(fo):
         words.add(word)
     return words
 
-def process_annotation_incorrect_token(instances_count_, global_top_k_, languages_top_k_, columns_written_,  tokenizer_, masked_sentence_dict_, learnerl1_, model_, MODEL_NAME, MAX_K, FCE_DATASET_OUTF):
-    """
-        process an annotation of an incorrect token
-        params:
-            instances_count_: dict
-            global_top_k_: list
-            languages_top_k_: dict
-            columns_written_: bool
-            annotation_: dict
-            tokenizer_: tokenizer
-            masked_sentence_dict_: dict
-            learnerl1_: str
-            model_: model
-            MODEL_NAME: str
-            MAX_K: int
-            FCE_DATASET_OUTF: file
-        returns:
-            instances_count_: dict
-            global_top_k_: list
-            languages_top_k_: dict
-            columns_written_: bool
-        examples:
-            >>> process_annotation_incorrect_token(instances_count_, global_top_k_, languages_top_k_, columns_written_,  annotation_, tokenizer_, masked_sentence_dict_, learnerl1_, model_, MODEL_NAME, MAX_K, FCE_DATASET_OUTF)
-            (instances_count_, global_top_k_, languages_top_k_, columns_written_)
-    """
-    print(masked_sentence_dict_);exit()
-    start_time = time.time()
-    s, e  = annotation_["span_in_DeannotatedSentence"]
-    tokens_idx_to_be_masked = [token_data[2]]
-    masked_tokens = [token_data[0]]
-    masked_tokenized_sentence = [ token_tpl[0] 
-                                if token_tpl[2] not in tokens_idx_to_be_masked 
-                                else tokenizer_.mask_token
-                                 for token_tpl in sentence_dict_["tokenized_deannotated_sentence"] ] 
-    #print(masked_tokens)
-    #print(masked_tokenized_sentence)
-    #print(tokenizer_.tokenize(masked_tokens[0]))
-    masked_tokens_vocab_idxs = [tokenizer_.encode(masked_token)[1] for masked_token in masked_tokens]
-    #print(masked_tokens_vocab_idxs)
-    #print(tokenizer_.decode(masked_tokens_vocab_idxs))
-    corrected_token = annotation_["correct_token"]
-    top_k_tpls_per_masked_token, annotation_ = predict(tokenizer_, model_, MODEL_NAME, masked_tokenized_sentence, annotation_, aligned_token_idx, k=MAX_K)
 
+def generate_tsv_line_from_masked_sentence_dict(masked_sentence_dict):
     annotation_csv_line = f""
     annotation_csv_columns = f""
     # l1 
@@ -176,25 +132,55 @@ def process_annotation_incorrect_token(instances_count_, global_top_k_, language
         annotation_csv_line  += f"{annotation_['aligned_incorrect_tokens'][aligned_token_idx][5][i][2]}\t"
         annotation_csv_line  += f"{annotation_['aligned_incorrect_tokens'][aligned_token_idx][5][i][3]}\t"
 
-    for (top_k_tpls, masked_token_idx) in zip(top_k_tpls_per_masked_token, masked_tokens_vocab_idxs):
-        instances_count_["tokens"] +=1
-        instances_count_[f"tokens_{learnerl1_}"] +=1
+def process_annotation_incorrect_token(instances_count_, global_top_k_, languages_top_k_, columns_written_,  tokenizer_, masked_sentences_batch_, model_, MODEL_NAME, MAX_K, FCE_DATASET_OUTF):
+    """
+        process an annotation of an incorrect token
+        params:
+            instances_count_: dict
+            global_top_k_: list
+            languages_top_k_: dict
+            columns_written_: bool
+            tokenizer_: tokenizer
+            masked_sentence_dict_: dict
+            learnerl1_: str
+            model_: model
+            MODEL_NAME: str
+            MAX_K: int
+            FCE_DATASET_OUTF: file
+        returns:
+            instances_count_: dict
+            global_top_k_: list
+            languages_top_k_: dict
+            columns_written_: bool
+        examples:
+            >>> process_annotation_incorrect_token(instances_count_, global_top_k_, languages_top_k_, columns_written_,  annotation_, tokenizer_, masked_sentence_dict_, learnerl1_, model_, MODEL_NAME, MAX_K, FCE_DATASET_OUTF)
+            (instances_count_, global_top_k_, languages_top_k_, columns_written_)
+    """
+    tokens_idx_to_be_masked = [masked_sentence_dict_["incorrect_token_idx"] for masked_sentence_dict_ in masked_sentences_batch_]
+    masked_tokens = [masked_sentence_dict_["incorrect_token"] for masked_sentence_dict_ in masked_sentences_batch_]
+    masked_tokenized_sentences_str_batch =  [masked_sentence_dict_["masked_sentence"].replace("[MASK]", tokenizer_.mask_token) for masked_sentence_dict_ in masked_sentences_batch_]   
+    start_time = time.time()
+    top_k_tpls_per_masked_token  = predict(tokenizer_, model_, MODEL_NAME, masked_tokenized_sentences_str_batch, k=MAX_K)
 
-        instance_top_k_flags, true_token_rank = top_k(masked_token_idx,top_k_tpls,MAX_K=MAX_K)
-        top_k_metrics_to_report = 10 
-        annotation_csv_columns += f"true_token_rank\t"
-        annotation_csv_line  += f"{true_token_rank}\t"
+    for MS_idx, (masked_sentence_dict_, masked_token_top_k_tpl) in enumerate(zip(masked_sentences_batch_, top_k_tpls_per_masked_token)): 
+        print(masked_token_top_k_tpl[:10])
+        instance_top_k_flags, true_token_rank = str_based_top_k(masked_sentence_dict_["incorrect_token"], masked_token_top_k_tpl,MAX_K=MAX_K)
+        masked_sentences_batch_[MS_idx]["true_token_rank"] = true_token_rank  
+        for k_idx, top_k_prediction_tpl in enumerate(masked_token_top_k_tpl):
+            masked_sentences_batch_[MS_idx][f"top_{k_idx+1}_token"] = top_k_prediction_tpl[0]
+            masked_sentences_batch_[MS_idx][f"top_{k_idx+1}_probability"] = top_k_prediction_tpl[2] 
+
         for k_idx in range(0,top_k_metrics_to_report): 
             k = k_idx + 1
             annotation_csv_columns += f"top_{k}_metric\t"
             annotation_csv_line  += f"{instance_top_k_flags[k_idx]}\t"
-        global_top_k_ = [a+b for (a,b) in zip(global_top_k_, instance_top_k_flags)]
-        languages_top_k_[learnerl1_] = [a+b for (a,b) in zip(languages_top_k_[learnerl1_] , instance_top_k_flags)]
-    if not columns_written_:
-        FCE_DATASET_OUTF.write(annotation_csv_columns+"\n")
-        columns_written_ = True
-
-    FCE_DATASET_OUTF.write(annotation_csv_line+"\n")
+            # generate_tsv_line_from_masked_sentence_dict(masked_sentence_dict_)
+            global_top_k_ = [a+b for (a,b) in zip(global_top_k_, instance_top_k_flags)]
+            languages_top_k_[learnerl1_] = [a+b for (a,b) in zip(languages_top_k_[learnerl1_] , instance_top_k_flags)]
+            if not columns_written_:
+                FCE_DATASET_OUTF.write(annotation_csv_columns+"\n")
+                columns_written_ = True
+            FCE_DATASET_OUTF.write(annotation_csv_line+"\n")
     print(time.time()-start_time)
     print(instances_count_)
     return instances_count_, global_top_k_, languages_top_k_, columns_written_
@@ -338,13 +324,14 @@ def main(_INPUT_FILEPATH,
          _INSTANCES_COUNT_FILEPATH,
          _FCE_PREDICTIONS_DATASET_FILEPATH,
          _PREDICTION_TARGET,
-         _MAX_K
+         _MAX_K,
+         _BATCH_SIZE
         ):
 
     ##### model loading strategy
     try:
         model = AutoModelForMaskedLM.from_pretrained(_MODEL_FOLDER)
-        tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_FOLDER)
+        tokenizer = AutoTokenizer.from_pretrained(_TOKENIZER_FOLDER)
     except:
         try:
             model = AutoModelForMaskedLM.from_pretrained(_MODEL_NAME)
@@ -352,6 +339,8 @@ def main(_INPUT_FILEPATH,
         except:
             model = AutoModelForMaskedLM.from_pretrained(_MODEL_FOLDER)
             tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+    if _MAX_K == "vocabulary":
+        _MAX_K = len(tokenizer.vocab)
 
     if _DATASET_NAME.upper()  == "FCE": 
         columns_written = False
@@ -360,11 +349,12 @@ def main(_INPUT_FILEPATH,
         languages_top_k = collections.defaultdict(lambda: [0 for _  in range(_MAX_K)]) 
         with open(_INPUT_FILEPATH) as inpf, open(_FCE_PREDICTIONS_DATASET_FILEPATH,"w") as FCE_DATASET_OUTF:
             fce_sentences_dict = load_fce(inpf, _INPUT_TYPE)
-            for masked_sentence_dict in fce_sentences_dict:
-                learnerl1 = masked_sentence_dict["learnerl1"] 
+            for batch_start_idx in range(0, len(fce_sentences_dict), _BATCH_SIZE):
+                batch_end_idx =  batch_start_idx+_BATCH_SIZE
+                masked_sentences_batch = fce_sentences_dict[batch_start_idx:batch_end_idx]
                 if _PREDICTION_TARGET == PredictionTargets["i"]:
                     instances_count, global_top_k, languages_top_k, columns_written =\
-                            process_annotation_incorrect_token(instances_count, global_top_k, languages_top_k, columns_written, tokenizer, masked_sentence_dict, learnerl1, model, _MODEL_NAME, _MAX_K, FCE_DATASET_OUTF)
+                            process_annotation_incorrect_token(instances_count, global_top_k, languages_top_k, columns_written, tokenizer, masked_sentences_batch, model, _MODEL_NAME, _MAX_K, FCE_DATASET_OUTF)
                 elif _PREDICTION_TARGET == PredictionTargets["c"]:
                     instances_count, global_top_k, languages_top_k, columns_written =\
                             process_annotation_correct_token(instances_count, global_top_k, languages_top_k, columns_written, annotation, tokenizer, sentence_dict, learnerl1, model, _MODEL_NAME, _MAX_K, FCE_DATASET_OUTF)
@@ -383,49 +373,6 @@ def main(_INPUT_FILEPATH,
                 top_ks = {
                 }
                 for lastIdx in [_MAX_K]:
-                    top_ks[lastIdx] = top_k_acc[:lastIdx]
-                    for language in languages_top_k_acc.keys():
-                        top_ks[f"{language}_{lastIdx}"] = languages_top_k_acc[language][:lastIdx]
-                metrics_outf.write(json.dumps(top_ks, indent=4))
-            with open(instances_count_filepath,"w") as instances_count_outf:
-                instances_count_outf.write(json.dumps(instances_count, indent=4))
-    if dataset == "EFCAMDAT": 
-        columns_written = False
-        #print(dir(tokenizer))
-        #print(len(tokenizer.vocab))
-        #print(tokenizer.unk_token_id)
-        MAX_K = 1000 #len(tokenizer.vocab) # 30522
-        instances_count = collections.defaultdict(int)
-        global_top_k = [0 for _ in range(MAX_K)]
-        languages_top_k = collections.defaultdict(lambda: [0 for _  in range(MAX_K)]) 
-        #"/app/pipelines/data/fce_dataset/fce_error_annotations.json"
-        with open(INPUT_FILEPATH) as inpf, open(fce_predictions_dataset_filepath,"w") as FCE_DATASET_OUTF:
-            fce_sentences_dict = json.loads(inpf.read())
-            for masked_sentence_dict in fce_sentences_dict.values():
-                learnerl1 = masked_sentence_dict["learnerl1"] 
-                if PREDICTION_TARGET == PredictionTargets["i"]:
-                    instances_count, global_top_k, languages_top_k, columns_written =\
-                            process_annotation_incorrect_token(instances_count, global_top_k, languages_top_k, columns_written, annotation, tokenizer, sentence_dict, learnerl1, model, MODEL_NAME, MAX_K, FCE_DATASET_OUTF)
-                elif PREDICTION_TARGET == PredictionTargets["c"]:
-                    instances_count, global_top_k, languages_top_k, columns_written =\
-                            process_annotation_correct_token(instances_count, global_top_k, languages_top_k, columns_written, annotation, tokenizer, sentence_dict, learnerl1, model, MODEL_NAME, MAX_K, FCE_DATASET_OUTF)
-                else: 
-                    raise Exception("invalid option")
-            instances_count["sentences"] +=1
-            instances_count[f"sentences_{learnerl1}"] +=1
-            top_k_acc = [v/instances_count["tokens"] for v in global_top_k]
-            languages_top_k_acc = {
-                    language: [v/instances_count[f"tokens_{language}"] for v in language_top_k_lst]
-                        for language, language_top_k_lst in languages_top_k.items()
-                    }
-            maps_counts = sorted([tpl for tpl in instances_count.items() if 'mapping_' in tpl[0]],key=lambda x:x[1])
-            total = sum([v for k,v in maps_counts])
-            print([(k, v/total) for k,v in maps_counts]) 
-
-            with open(model_metrics_filepath,"w") as metrics_outf:
-                top_ks = {
-                }
-                for lastIdx in [MAX_K]:
                     top_ks[lastIdx] = top_k_acc[:lastIdx]
                     for language in languages_top_k_acc.keys():
                         top_ks[f"{language}_{lastIdx}"] = languages_top_k_acc[language][:lastIdx]
@@ -480,7 +427,7 @@ if __name__ == "__main__":
         config = json.load(inpf)
         config = {k.upper(): v  for k,v in config.items()}
         locals().update(**config)
-    MAX_K = MAX_K if MAX_K != "vocabulary" else "VOCABULARY_SIZE"
+    MAX_K = MAX_K if MAX_K != "vocabulary" else "vocabulary"
     time_ = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     MODEL_FOLDER = f"/app/pipelines/models/{MODEL_NAME}" 
     TOKENIZER_FOLDER = MODEL_FOLDER
@@ -502,5 +449,6 @@ if __name__ == "__main__":
             INSTANCES_COUNT_FILEPATH,
             FCE_PREDICTIONS_DATASET_FILEPATH,
             PREDICTION_TARGET,
-            MAX_K
+            MAX_K,
+            BATCH_SIZE
         )

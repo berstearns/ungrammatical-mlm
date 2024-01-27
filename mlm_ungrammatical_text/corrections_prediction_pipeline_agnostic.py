@@ -70,6 +70,8 @@ def predict(tokenizer, model, MODEL_NAME, tokenized_masked_sentence, annotation_
     top_k_tpls_per_masked_token = [list(zip(*tpl)) for tpl in zip(top_k_tokens.indices.tolist(), top_k_tokens.values.tolist())]
     top_k_tpls_per_masked_token = [[(tokenizer.decode(tpl[0]), *tpl, prediction_postag(tokenized_masked_sentence,tokenizer.decode(tpl[0]),tokenizer))
                                    for tpl in prediction_list] for prediction_list in top_k_tpls_per_masked_token]
+    print(masked_sentence_str)
+    print(top_k_tpls_per_masked_token);exit()
 
 
     annotation_["aligned_incorrect_tokens"][aligned_token_idx] = (*annotation_["aligned_incorrect_tokens"][aligned_token_idx],(MODEL_NAME,*top_k_tpls_per_masked_token[0]))   
